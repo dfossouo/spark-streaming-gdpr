@@ -4,28 +4,41 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.billymob</groupId>
-    <artifactId>spark-streaming-kafka-0-10-demo</artifactId>
+    <groupId>com.github.dfossouo</groupId>
+    <artifactId>spark-streaming-gdpr</artifactId>
     <version>1.0</version>
 
     <properties>
-        <spark.version>2.1.0</spark.version>
+        <hdp.version>2.6.5.0-292</hdp.version>
+        <hadoop.version>2.7.3</hadoop.version>
+        <spark.version>2.3.0</spark.version>
+        <scala.version>2.11</scala.version>
+        <hbase.version>1.1.2</hbase.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-core_2.11</artifactId>
+            <artifactId>spark-core_${scala.version}</artifactId>
             <version>${spark.version}</version>
+            <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>guava</artifactId>
+                    <groupId>com.google.guava</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-sql_2.10 -->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql_${scala.version}</artifactId>
+            <version>${spark.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-streaming_2.11</artifactId>
-            <version>${spark.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-streaming-kafka-0-10_2.11</artifactId>
             <version>${spark.version}</version>
         </dependency>
     </dependencies>
@@ -83,7 +96,7 @@
                         <configuration>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.billymob.spark.streaming.kafka010.demo.SparkStreamingKafkaDemo</mainClass>
+                                    <mainClass>com.github.dfossouo.Spark.gdprhive</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
