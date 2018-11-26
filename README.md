@@ -1,4 +1,4 @@
-# hbase-py
+# Spark Streaming GDPR
 
 ## Prerequisites 
 ### Scala 2.11
