@@ -1,0 +1,45 @@
+##############################################################
+#
+# General Props
+#
+##############################################################
+hbase.rootdir=/apps/hbase/data
+hbase.zookeeper.quorum=hdpcluster-15377-master-0.field.hortonworks.com,hdpcluster-15377-compute-2.field.hortonworks.com,hdpcluster-15377-worker-1.field.hortonworks.com:2181
+zookeeper.znode.parent=/hbase-unsecure
+hbase.snapshot.path=/user/dfossouo
+
+hbase.rootdir_x=/apps/hbase/data
+hbase.zookeeper.quorum_x=c325-node4.field.hortonworks.com,c325-node3.field.hortonworks.com,c325-node2.field.hortonworks.com:2181
+zookeeper.znode.parent_x=/hbase-unsecure
+hbase.snapshot.path_x=/user/dfossouo
+
+##############################################################
+#
+# Props for SparkReadHBaseTable
+#
+##############################################################
+hbase.table.name=customer_info
+hbase.table.versions=3
+datetime_threshold=2018-10-16 11:24:08:000
+
+hbase.table.name_x=customer_info
+hbase.table.versions_x=3
+datetime_threshold_x=2018-10-16 11:24:08:000
+hbase.table.start_time=1540365233000L
+hbase.table.family=demographics
+
+##############################################################
+#
+# Props for ES
+#
+##############################################################
+es_ip=10.42.17.10
+es_port=9200
+es_index=hbase_replication
+
+##############################################################
+#
+# Props for GDPR
+#
+##############################################################
+hbase.table_gdpr.name=customers_deletion
