@@ -22,7 +22,9 @@ import org.apache.spark.streaming.{Seconds, StreamingContext}
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.hadoop.hbase.util.{Base64, Bytes}
 import org.apache.spark.sql.Row
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.types.{IntegerType, StringType, StructField, StructType}
+
 
 import scala.collection.mutable.HashMap
 import scala.io.Source.fromFile
@@ -44,22 +46,23 @@ object GDPRHive {
     val props = getProps(args(0))
 
     val path = props.get("zookeeper.znode.parent").get
-    val table = props.get("hbase.table_gdpr.name").get
+    val table = props.get("hive.table_gdpr.name").get
 
-    // Create Spark Application
-    val sparkConf = new SparkConf().setAppName("GDPRHIVE")
-    sparkConf.set("spark.driver.allowMultipleContexts", "true")
-    sparkConf.set("spark.shuffle.service.enabled", "false")
-    sparkConf.set("spark.dynamicAllocation.enabled", "false")
+    val spark = SparkSession
+      .builder()
+      .appName("GDPRHIVE")
+      .enableHiveSupport()
+      .getOrCreate()
 
-    val sc = new SparkContext(sparkConf)
-    val sqlContext = new org.apache.spark.sql.SQLContext(sc)
-    import sqlContext.implicits._
+    import spark.implicits._
 
+    val sc = spark.sparkContext
     val ssc = new StreamingContext(sc, Seconds(10))
 
     // parse the lines of data into customer objects
     val textDStream = ssc.textFileStream("/user/hbase/customers_deletion.csv")
+
+    val iban_static = "FRXX 2002 XXXX 2606 XXXX YYYY 606"
 
     println("********" + "print each elements")
 
@@ -68,8 +71,36 @@ object GDPRHive {
       bpcol.collect().foreach(i => {
         val record = i.mkString
 
-        sqlContext.sql("UPDATE "+ table + "\nSET iban='FRXX 2002 XXXX 2606 XXXX YYYY 606' \nWHERE bp = " + record)
-        sqlContext.sql("UPDATE "+ table + "\nSET street='XX RUE DE PARIS 750XX PARIS' \nWHERE bp = " + record)
+        // GET THE ROW TO DELETE AND KEEP ROW VALUES
+        val client_table = spark.sql("SELECT * FROM default." + table + " WHERE bp = " + record + " LIMIT 1")
+        val age = client_table.select("age").map(row => row.mkString).collect
+        print(" ********************* the customer age is " + age.mkString + " ********************* ")
+
+        val custid = client_table.select("custid").map(row => row.mkString).collect
+        print(" ********************* the customer custid is " + custid.mkString + " ********************* ")
+
+        val gender = client_table.select("gender").map(row => row.mkString).collect
+        print(" ********************* the customer gender is " + gender.mkString + " ********************* ")
+
+        val iban = client_table.select("iban").map(row => row.mkString).collect
+        print(" ********************* the customer iban is " + iban.mkString + " ********************* ")
+
+        val level = client_table.select("level").map(row => row.mkString).collect
+        print(" ********************* the customer level is " + level.mkString + " ********************* ")
+
+        val pdl = client_table.select("pdl").map(row => row.mkString).collect
+        print(" ********************* the customer pdl is " + pdl.mkString + " ********************* ")
+
+        // DELETE THE ROW WHERE THE BP HAVE BEEN SCHEDULED FOR DELETION
+        spark.sql("ALTER TABLE " + table + " DROP IF EXISTS PARTITION (bp ='" + record +"')")
+        //spark.sql("DELETE FROM "+ table + " WHERE bp = " + record)
+        // INSERT THE ROW WITH UPDATE FIELDS
+        spark.sql("use default")
+        spark.sql("set hive.exec.dynamic.partition=true")
+        spark.sql("set hive.exec.dynamic.partition.mode=nonstrict")
+        spark.sql("set hive.enforce.bucketing=false")
+        spark.sql("set hive.enforce.sorting=false")
+        spark.sql("INSERT INTO "+ table + " PARTITION(bp) VALUES ('" + age.mkString + "','" + custid.mkString + "','" + gender.mkString + "','" + iban_static + "','" + level.mkString + "','" + pdl.mkString + "','" + record + "')")
 
       })
     })

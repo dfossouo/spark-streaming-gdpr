@@ -43,3 +43,4 @@ es_index=hbase_replication
 #
 ##############################################################
 hbase.table_gdpr.name=customers_deletion
+hive.table_gdpr.name=clients_info_28112018
